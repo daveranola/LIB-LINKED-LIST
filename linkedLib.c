@@ -4,23 +4,29 @@
 
 //book object -> has author, year made and the name of the book
 typedef struct book {
-    char author[100];
+    char author[100], bookName[100];
     int year;
-    char bookName[100];
+    
 
     struct book *next; //pointer to the next book (linked list)
 } book;
 
 
 //all functions used
+void printLine(); //formatting makes it look nice
+
 book *createBook(char *author, char* bookName, int year);
 void addBook(book** head, char* author, char* bookName, int year);
-void displayAllBooks(book* head);
-void findBook(book* head, char *name);
+void displayAllBooks(book* head); 
+void findBook(book* head, char *name); //finds a book with the given name
+void removeBook(book** head, char* name); //used to remove book with matching name
+void insertBookPos(book** head, int pos, char *author, char* bookName, int year); //inserts a book at the given pos
+void deleteBookPos(book** head, int pos); //deletes a book at the given pos
 
-void insertBookPos();
-void removeBook(book** head, char* name);
-
+void printLine()
+{
+    printf("-----------------------------------------------------------------------------\n");
+}
 
 //createBook makes new book node || createBook is a pointer as malloc can not be operated off static object's (only works if pointer)
 book *createBook(char *author, char* bookName, int year)
@@ -35,7 +41,6 @@ book *createBook(char *author, char* bookName, int year)
 
     return newBook;
 }
-
 
 // addBook, adds book to library || book** is a double pointer as if it is only one pointer we wouldnt be able to change the value of head
 void addBook(book** head, char* author, char* bookName, int year)
@@ -55,23 +60,28 @@ void addBook(book** head, char* author, char* bookName, int year)
         temp->next = newBook; //once it finds the last book, the node with a NULL pointer, it sets the newBook as the last node in the linked list
     }
 
-    printf("%s has been successfully added!\n");
+    printf("\"%s\" has been successfully added!\n");
+    printLine();
 }
 
 void displayAllBooks(book* head) //only book* head as we dont want to modify the head
 {
-    if (head == NULL)
-    {
-        printf("There are no books in the current library!!!");
-        return;
-    }
+    // if (head == NULL)
+    // {
+    //     printf("There are no books in the current library!!!\n");
+    //     return;
+    // }
+
+    int pos = 0;
 
     book* current = head;
     while (current != NULL)
     {
-        printf("Author: %s \t Year: %d \t Name: %s \n", current->author, current->year, current->bookName);
+        pos++;
+        printf("Position: %d \t Author: %s \t Year: %d \t Name: %s \n", pos, current->author, current->year, current->bookName);
         current = current->next;
     }
+    printLine();
 }
 
 void findBook(book* head, char *name)
@@ -93,6 +103,7 @@ void findBook(book* head, char *name)
     }
 
     printf("The book is not in the library\n");
+    printLine();
     
 }
 
@@ -101,6 +112,12 @@ void removeBook(book** head, char* name)
 
     book* current = *head;
     book* previous = NULL;
+
+    if (*head == NULL)
+    {
+        printf("The library is empty!\n");
+        return;
+    }
 
     while (current != NULL)
     {
@@ -123,39 +140,212 @@ void removeBook(book** head, char* name)
 
     }
 
+    printf("\"%s\" has beed successfully removed!\n", name);
+    printLine();
+}
+
+void insertBookPos(book** head, int pos, char *author, char* bookName, int year)
+{
+    //edge case
+    if (pos == 1)
+    {   
+        book* new = createBook(author, bookName, year);
+        new->next = *head;
+        *head = new;
+        return;
+    }
+
+    if (pos < 1)
+    {
+        printf("Invalid Position!");
+        printLine();
+        return;
+    }
+
+    int count = 1;
+
+    book* prev = *head;
+
+    while (count < pos - 1 && prev != NULL)
+    {
+        prev = prev->next;
+        count++;
+    }
+
+    book* new = createBook(author, bookName, year);
+    new->next = prev->next;
+    prev->next = new;
+
+}
+
+void deleteBookPos(book** head, int pos)
+{
+    //edge cases
+    if (*head == NULL)
+    {
+        printf("The library is empty!\n");
+        return;
+    }
+
+    if (pos == 1)
+    {
+       book* prev = *head;
+       *head = prev->next;
+       free(prev);
+       return; 
+    }
+
+    if (pos < 1 || *head == NULL)
+    {
+        printf("Invalid Position!");
+        return;
+    }
+
+    int count = 1;
+    book* current = *head;
+    book* prev =  NULL;
+
+    while (count != pos && current != NULL)
+    {
+        prev = current;
+        current = current->next;
+        count++;
+    }
+
+    if (current == NULL)
+    {
+        printf("The position is out of range!");
+    }
+
+    printf("\"%s\" has been successfully removed!", current->bookName);
+    printLine();
+
+    prev->next = current->next; //skips node to be deleted
+    free(current); //deletes node
+
+
+    
+
 
 }
 
 int main()
 {
     book* library = NULL;
+    int choice, year, pos = 0;
+    char author[100], bookName[100];
 
-    addBook(&library, "Auth1", "Book 1", 1);
-    addBook(&library, "Auth2", "Book 2", 2);
-    addBook(&library, "Auth3", "Book 3", 3);
-    addBook(&library, "Auth4", "Book 4", 4);
+    while (1)
+    {
+        printf("1. Add book \n2. Remove book \n3. Display library\n4. Insert book\n5. Exit\n");
+        printLine();
+        scanf("%d", &choice);
 
-    printf("\n");
+        switch (choice)
+        {
+            case 1:
+            {
+                printf("Enter author name: \n");
+                //printLine();
+                scanf("%s", author);
+                printf("Enter book name: \n");
+                // printLine();
+                scanf("%s", bookName);
+                printf("Enter the year published: \n");
+                // printLine();
+                scanf("%d", &year);
+                printLine();
+                addBook(&library, author, bookName, year);
+                displayAllBooks(library);
+                break;
+            }
+            case 2:
+            {
+                printf("Remove book by:\n1. Position\n2. Name\n");
+                scanf("%d", &pos);
 
-    displayAllBooks(library);
+                if (pos == 1)
+                {
+                    int del;
 
-    printf("\n");
+                    displayAllBooks(library);
 
-    findBook(library, "Book 1");
+                    printf("Enter position: \n");
+                    scanf("%d", del);
 
-    printf("\n");
+                    printLine();
 
-    removeBook(&library, "Book 1");
+                    deleteBookPos(&library, del);
 
-    printf("\n");
+                    printLine();
 
-    displayAllBooks(library);
+                    displayAllBooks(library);
 
-    printf("\n");
+                }
 
-    findBook(library, "Book 1");
+                else if (pos == 2)
+                {
+                    printf("Enter book name: \n");
+                    scanf("%s", bookName);
+                    printLine();
+                    removeBook(&library, bookName);
+                    displayAllBooks(library);
+                }
 
-    printf("\n");
+                break;
+            }
+                
+            case 3:
+            {
+                displayAllBooks(library);
+                break;
+            }
+                
+            case 4:
+            {
+                displayAllBooks(library);
+                printf("Enter position to insert at: \n");
+                scanf("%d", &pos);
 
-    return 0;
+                printf("Enter author name: \n");
+                //printLine();
+                scanf("%s", author);
+                printf("Enter book name: \n");
+                // printLine();
+                scanf("%s", bookName);
+                printf("Enter the year published: \n");
+                // printLine();
+                scanf("%d", &year);
+                printLine();
+
+                insertBookPos(&library, pos, author, bookName, year);
+
+                displayAllBooks(library);
+                break; 
+            }
+
+            case 5:
+            {
+                printf("Exiting...");
+                while(library != NULL)
+                {
+                    book* temp = library;
+                    library = library->next;
+                    free(temp);
+                }
+                printf("Successfully exited!!!");
+                return 0;
+            }
+                
+            default:
+            {
+                printf("Please enter a valid option!\n");
+                break; 
+            }
+                
+        }
+    }
+
+    
+
 }

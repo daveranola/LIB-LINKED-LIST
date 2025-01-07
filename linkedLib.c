@@ -1,18 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 //book object -> has author, year made and the name of the book
 typedef struct book {
     char author[100], bookName[100];
     int year;
-    
+    bool available;
 
     struct book *next; //pointer to the next book (linked list)
 } book;
 
 
-//all functions used
+//all functions used / function prototypes
 void printLine(); //formatting makes it look nice
 
 book *createBook(char *author, char* bookName, int year);
@@ -22,6 +23,9 @@ void findBook(book* head, char *name); //finds a book with the given name
 void removeBook(book** head, char* name); //used to remove book with matching name
 void insertBookPos(book** head, int pos, char *author, char* bookName, int year); //inserts a book at the given pos
 void deleteBookPos(book** head, int pos); //deletes a book at the given pos
+void borrowBook(book* head, int pos);
+void returnBook(book* head, int pos);
+
 
 void printLine()
 {
@@ -37,6 +41,7 @@ book *createBook(char *author, char* bookName, int year)
     strcpy(newBook->bookName, bookName);
 
     newBook->year = year;
+    newBook->available = true;
     newBook->next = NULL;
 
     return newBook;
@@ -73,12 +78,30 @@ void displayAllBooks(book* head) //only book* head as we dont want to modify the
     // }
 
     int pos = 0;
+    char status;
+
+    printf("%-10s %-20s %-10s %-20s %-10s\n", "Position", "Author", "Year", "Book Name", "Status");
+
+    printLine();
 
     book* current = head;
+
+
     while (current != NULL)
     {
         pos++;
-        printf("Position: %d \t Author: %s \t Year: %d \t Name: %s \n", pos, current->author, current->year, current->bookName);
+
+
+        if (current->available)
+        {
+            status = 'Y';
+        }
+        else if (!current->available)
+        {
+            status = 'N';
+        }
+
+        printf("%-10d %-20s %-10d %-20s %-10c\n", pos, current->author, current->year, current->bookName, status);
         current = current->next;
     }
     printLine();
@@ -222,10 +245,51 @@ void deleteBookPos(book** head, int pos)
 
     prev->next = current->next; //skips node to be deleted
     free(current); //deletes node
+}
 
+void borrowBook(book* head, int pos)
+{
+    int count = 1;
+    book* temp = head;
 
-    
+    while (temp != NULL && count != pos)
+    {
+        temp=temp->next;
+    }
 
+    if (temp->available == false)
+    {
+        printf("Book is being lended at this time!\n");
+        printLine();
+        return;
+    }
+
+    temp->available = false;
+
+    printf("\"%s\" by \"%s\" has been successfully borrowed!\n", temp->bookName, temp->author);
+    printLine();
+}
+
+void returnBook(book* head, int pos)
+{
+    int count = 1;
+    book* temp = head;
+    while (temp != NULL && pos != count)
+    {
+        temp = temp->next;
+    }
+
+    if (temp->available == true)
+    {
+        printf("Book is already there!\n");
+        printLine();
+        return;
+    }
+
+    temp->available = true;
+
+    printf("\"%s\" by \"%s\" was returned successfully!\n", temp->bookName, temp->author);
+    printLine();
 
 }
 
@@ -235,11 +299,17 @@ int main()
     int choice, year, pos = 0;
     char author[100], bookName[100];
 
+    addBook(&library, "Auth 1", "Book 1", 2001);
+    addBook(&library, "Auth 2", "Book 2", 2002);
+    addBook(&library, "Auth 3", "Book 3", 2003);
+    addBook(&library, "Auth 4", "Book 4", 2004);
+
     while (1)
     {
-        printf("1. Add book \n2. Remove book \n3. Display library\n4. Insert book\n5. Exit\n");
+        printf("1. Add book \n2. Remove book \n3. Insert book\n4. Display library\n5. Borrow book\n6. Return book\n7. Exit\n");
         printLine();
         scanf("%d", &choice);
+        printLine();
 
         switch (choice)
         {
@@ -281,6 +351,8 @@ int main()
 
                     displayAllBooks(library);
 
+                    pos = 0;
+
                 }
 
                 else if (pos == 2)
@@ -290,18 +362,14 @@ int main()
                     printLine();
                     removeBook(&library, bookName);
                     displayAllBooks(library);
+
+                    pos = 0;
                 }
 
                 break;
             }
-                
+                     
             case 3:
-            {
-                displayAllBooks(library);
-                break;
-            }
-                
-            case 4:
             {
                 displayAllBooks(library);
                 printf("Enter position to insert at: \n");
@@ -321,10 +389,60 @@ int main()
                 insertBookPos(&library, pos, author, bookName, year);
 
                 displayAllBooks(library);
+
+                pos = 0;
                 break; 
             }
 
+            case 4:
+            {
+                displayAllBooks(library);
+                break;
+            }
+
             case 5:
+            {
+                printf("Enter the book position you want to borrow: \n");
+
+                printLine();
+
+                displayAllBooks(library);
+
+                scanf("%d", &pos);
+                
+                printLine();
+
+                borrowBook(library, pos);
+
+                // displayAllBooks(library);
+
+                pos = 0;
+
+                break;
+            }
+
+            case 6:
+            {
+                printf("Enter the book position you want to return: \n");
+
+                printLine();
+
+                displayAllBooks(library);
+
+                scanf("%d", &pos);
+                
+                printLine();
+
+                returnBook(library, pos);
+
+                // displayAllBooks(library);
+
+                pos = 0;
+
+                break;
+            }
+
+            case 7:
             {
                 printf("Exiting...");
                 while(library != NULL)
@@ -345,7 +463,4 @@ int main()
                 
         }
     }
-
-    
-
 }

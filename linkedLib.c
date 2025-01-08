@@ -16,8 +16,8 @@ typedef struct book {
 //all functions used / function prototypes
 void printLine(); //formatting makes it look nice
 
-book *createBook(char *author, char* bookName, int year);
-void addBook(book** head, char* author, char* bookName, int year);
+book *createBook(char *author, char* bookName, int year, bool status);
+void addBook(book** head, char* author, char* bookName, int year, bool status);
 void displayAllBooks(book* head); 
 void findBook(book* head, char *name); //finds a book with the given name
 void removeBook(book** head, char* name); //used to remove book with matching name
@@ -26,6 +26,9 @@ void deleteBookPos(book** head, int pos); //deletes a book at the given pos
 void borrowBook(book* head, int pos);
 void returnBook(book* head, int pos);
 
+void saveLib(book* head);
+void loadLib(book** head);
+
 
 void printLine()
 {
@@ -33,7 +36,7 @@ void printLine()
 }
 
 //createBook makes new book node || createBook is a pointer as malloc can not be operated off static object's (only works if pointer)
-book *createBook(char *author, char* bookName, int year)
+book *createBook(char *author, char* bookName, int year, bool status)
 {
     book* newBook = (book*)malloc(sizeof(book)); //allocated memory for new book
 
@@ -41,16 +44,16 @@ book *createBook(char *author, char* bookName, int year)
     strcpy(newBook->bookName, bookName);
 
     newBook->year = year;
-    newBook->available = true;
+    newBook->available = status;
     newBook->next = NULL;
 
     return newBook;
 }
 
 // addBook, adds book to library || book** is a double pointer as if it is only one pointer we wouldnt be able to change the value of head
-void addBook(book** head, char* author, char* bookName, int year)
+void addBook(book** head, char* author, char* bookName, int year, bool status)
 {
-    book* newBook = createBook(author, bookName, year);
+    book* newBook = createBook(author, bookName, year, status);
     if (*head == NULL)
     {
         *head = newBook;
@@ -172,7 +175,7 @@ void insertBookPos(book** head, int pos, char *author, char* bookName, int year)
     //edge case
     if (pos == 1)
     {   
-        book* new = createBook(author, bookName, year);
+        book* new = createBook(author, bookName, year, true);
         new->next = *head;
         *head = new;
         return;
@@ -195,7 +198,7 @@ void insertBookPos(book** head, int pos, char *author, char* bookName, int year)
         count++;
     }
 
-    book* new = createBook(author, bookName, year);
+    book* new = createBook(author, bookName, year, true);
     new->next = prev->next;
     prev->next = new;
 
@@ -293,16 +296,51 @@ void returnBook(book* head, int pos)
 
 }
 
+void saveLib(book* head)
+{
+    FILE *fp = fopen("library.txt", "a"); //appends to the file, "w" will remove everything old from the file!
+
+    book* temp = head;
+
+
+    while (temp != NULL)
+    {
+        fprintf(fp, "%s,%d,%s,%d\n", temp->author, temp->year, temp->bookName, temp->available);
+        temp = temp->next;
+    }
+
+    fclose(fp);
+    
+
+}
+
+void loadLib(book** head)
+{
+    FILE *fp = fopen("library.txt", "r");
+
+    char author[100], bookName[100];
+    int year;
+    int available;
+
+    while(fscanf(fp, "%99[^,],%d,%99[^,],%d\n", author, &year, bookName, &available) != EOF)
+    {
+        addBook(head, author, bookName, year, available);
+    }
+    fclose(fp);
+}
+
 int main()
 {
     book* library = NULL;
     int choice, year, pos = 0;
     char author[100], bookName[100];
 
-    addBook(&library, "Auth 1", "Book 1", 2001);
-    addBook(&library, "Auth 2", "Book 2", 2002);
-    addBook(&library, "Auth 3", "Book 3", 2003);
-    addBook(&library, "Auth 4", "Book 4", 2004);
+    addBook(&library, "Auth 1", "Book 1", 2001, true);
+    addBook(&library, "Auth 2", "Book 2", 2002, true);
+    addBook(&library, "Auth 3", "Book 3", 2003, true);
+    addBook(&library, "Auth 4", "Book 4", 2004, true);
+
+    loadLib(&library);
 
     while (1)
     {
@@ -325,7 +363,7 @@ int main()
                 // printLine();
                 scanf("%d", &year);
                 printLine();
-                addBook(&library, author, bookName, year);
+                addBook(&library, author, bookName, year, true);
                 displayAllBooks(library);
                 break;
             }
@@ -445,6 +483,9 @@ int main()
             case 7:
             {
                 printf("Exiting...");
+
+                saveLib(library);
+
                 while(library != NULL)
                 {
                     book* temp = library;

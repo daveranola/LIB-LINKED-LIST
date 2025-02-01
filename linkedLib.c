@@ -298,7 +298,7 @@ void returnBook(book* head, int pos)
 
 void saveLib(book* head)
 {
-    FILE *fp = fopen("library.txt", "a"); //appends to the file, "w" will remove everything old from the file!
+    FILE *fp = fopen("library.txt", "w"); 
 
     book* temp = head;
 
@@ -322,7 +322,7 @@ void loadLib(book** head)
     int year;
     int available;
 
-    while(fscanf(fp, "%99[^,],%d,%99[^,],%d\n", author, &year, bookName, &available) != EOF)
+    while(fscanf(fp, "%99[^,],%d,%99[^,],%d\n", author, &year, bookName, &available) != EOF) //[^,] is called a delimiter, reads up to a coma and includes spaces. only used on strings, cannot be used on int's
     {
         addBook(head, author, bookName, year, available);
     }
@@ -335,10 +335,10 @@ int main()
     int choice, year, pos = 0;
     char author[100], bookName[100];
 
-    addBook(&library, "Auth 1", "Book 1", 2001, true);
-    addBook(&library, "Auth 2", "Book 2", 2002, true);
-    addBook(&library, "Auth 3", "Book 3", 2003, true);
-    addBook(&library, "Auth 4", "Book 4", 2004, true);
+    // addBook(&library, "Auth 1", "Book 1", 2001, true);
+    // addBook(&library, "Auth 2", "Book 2", 2002, true);
+    // addBook(&library, "Auth 3", "Book 3", 2003, true);
+    // addBook(&library, "Auth 4", "Book 4", 2004, true);
 
     loadLib(&library);
 
@@ -348,6 +348,7 @@ int main()
         printLine();
         scanf("%d", &choice);
         printLine();
+        while (getchar() != '\n');
 
         switch (choice)
         {
@@ -355,10 +356,12 @@ int main()
             {
                 printf("Enter author name: \n");
                 //printLine();
-                scanf("%s", author);
+                fgets(author, sizeof(author), stdin);
+                author[strlen(author) - 1] = '\0';
                 printf("Enter book name: \n");
                 // printLine();
-                scanf("%s", bookName);
+                fgets(bookName, sizeof(bookName), stdin);
+                bookName[strlen(bookName) - 1] = '\0';
                 printf("Enter the year published: \n");
                 // printLine();
                 scanf("%d", &year);
@@ -396,7 +399,8 @@ int main()
                 else if (pos == 2)
                 {
                     printf("Enter book name: \n");
-                    scanf("%s", bookName);
+                    fgets(bookName, sizeof(bookName), stdin);
+                    bookName[strlen(bookName)] = '\0';
                     printLine();
                     removeBook(&library, bookName);
                     displayAllBooks(library);
@@ -415,10 +419,12 @@ int main()
 
                 printf("Enter author name: \n");
                 //printLine();
-                scanf("%s", author);
+                fgets(author, sizeof(author), stdin);
+                author[strlen(author)] = '\0';
                 printf("Enter book name: \n");
                 // printLine();
-                scanf("%s", bookName);
+                fgets(bookName, sizeof(bookName), stdin);
+                bookName[strlen(bookName)] = '\0';
                 printf("Enter the year published: \n");
                 // printLine();
                 scanf("%d", &year);
